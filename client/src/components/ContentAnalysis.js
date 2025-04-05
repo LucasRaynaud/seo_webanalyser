@@ -1,7 +1,9 @@
 // src/components/ContentAnalysis.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoadingIndicator from './LoadingIndicator';
 import ProgressBar from './ProgressBar';
+import SeoScoreDetails from './SeoScoreDetails';
+import DetailedSeoScore from './DetailedSeoScore';
 import './ContentAnalysis.css';
 
 function ContentAnalysis({ pages, onCloseAnalysis }) {
@@ -11,6 +13,8 @@ function ContentAnalysis({ pages, onCloseAnalysis }) {
   const [analysisType, setAnalysisType] = useState('basic'); // 'basic' ou 'full'
   const [progress, setProgress] = useState(0);
   const [analysisStage, setAnalysisStage] = useState('');
+  const [selectedPage] = useState(null);
+  const [detailMode, setDetailMode] = useState('detailed');
 
   const startAnalysis = async () => {
     if (!pages || pages.length === 0) {
@@ -337,63 +341,80 @@ function ContentAnalysis({ pages, onCloseAnalysis }) {
                         <th>Score</th>
                       </>
                     )}
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {analysisResults && analysisResults.results && analysisResults.results.map((page, index) => {
-                    if (!page) return null; // Vérification supplémentaire pour éviter les erreurs
+                    if (!page) return null;
+
+                    const isSelected = selectedPage && selectedPage.url === page.url;
 
                     return (
-                      <tr key={index} className={page.error ? 'error-row' : ''}>
-                        <td>
-                          {page.url ? (
-                            <a
-                              href={page.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={page.url}
-                            >
-                              {page.url.length > 40 ? page.url.substring(0, 37) + '...' : page.url}
-                            </a>
-                          ) : (
-                            <span className="missing-data">URL non disponible</span>
+                      <React.Fragment key={index}>
+                        <tr className={`${page.error ? 'error-row' : ''} ${isSelected ? 'selected-row' : ''}`}>
+                          <td>
+                            {page.url ? (
+                              <a
+                                href={page.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={page.url}
+                              >
+                                {page.url.length > 40 ? page.url.substring(0, 37) + '...' : page.url}
+                              </a>
+                            ) : (
+                              <span className="missing-data">URL non disponible</span>
+                            )}
+                          </td>
+                          <td className={page.missingTitle ? 'issue-cell' : ''}>
+                            {page.metaTitle ? (
+                              <span title={page.metaTitle}>
+                                {page.metaTitle.length > 30 ? page.metaTitle.substring(0, 27) + '...' : page.metaTitle}
+                              </span>
+                            ) : (
+                              <span className="missing-data">Manquant</span>
+                            )}
+                          </td>
+                          <td className={(page.missingH1 || page.hasMultipleH1) ? 'issue-cell' : ''}>
+                            {page.missingH1 ? (
+                              <span className="missing-data">Manquant</span>
+                            ) : page.hasMultipleH1 ? (
+                              <span className="issue-data">{page.h1Count || 0} H1</span>
+                            ) : (
+                              <span title={page.h1Text || ''}>
+                                {page.h1Text ? (page.h1Text.length > 30 ? page.h1Text.substring(0, 27) + '...' : page.h1Text) : '-'}
+                              </span>
+                            )}
+                          </td>
+                          <td>{(page.h2Count !== undefined) ? page.h2Count : 0}</td>
+                          {analysisType === 'full' && (
+                            <>
+                              <td className={(page.loadTime !== undefined && page.loadTime > 3) ? 'issue-cell' : ''}>
+                                {page.loadTime ? `${page.loadTime.toFixed(2)}s` : '-'}
+                              </td>
+                              <td className={(page.fcp !== undefined && page.fcp > 2.5) ? 'issue-cell' : ''}>
+                                {page.fcp ? `${page.fcp.toFixed(2)}s` : '-'}
+                              </td>
+                              <td>
+                                {page.seoScore !== undefined ? renderSeoScore(Math.round(page.seoScore)) : '-'}
+                              </td>
+                            </>
                           )}
-                        </td>
-                        <td className={page.missingTitle ? 'issue-cell' : ''}>
-                          {page.metaTitle ? (
-                            <span title={page.metaTitle}>
-                              {page.metaTitle.length > 30 ? page.metaTitle.substring(0, 27) + '...' : page.metaTitle}
-                            </span>
-                          ) : (
-                            <span className="missing-data">Manquant</span>
-                          )}
-                        </td>
-                        <td className={(page.missingH1 || page.hasMultipleH1) ? 'issue-cell' : ''}>
-                          {page.missingH1 ? (
-                            <span className="missing-data">Manquant</span>
-                          ) : page.hasMultipleH1 ? (
-                            <span className="issue-data">{page.h1Count || 0} H1</span>
-                          ) : (
-                            <span title={page.h1Text || ''}>
-                              {page.h1Text ? (page.h1Text.length > 30 ? page.h1Text.substring(0, 27) + '...' : page.h1Text) : '-'}
-                            </span>
-                          )}
-                        </td>
-                        <td>{(page.h2Count !== undefined) ? page.h2Count : 0}</td>
-                        {analysisType === 'full' && (
-                          <>
-                            <td className={(page.loadTime !== undefined && page.loadTime > 3) ? 'issue-cell' : ''}>
-                              {page.loadTime ? `${page.loadTime.toFixed(2)}s` : '-'}
+                            {detailMode === 'simple' ? (
+                              <SeoScoreDetails page={page} />
+                            ) : (
+                              <DetailedSeoScore page={page} />
+                            )}
+                        </tr>
+                        {isSelected && (
+                          <tr className="details-row">
+                            <td colSpan={analysisType === 'full' ? 8 : 5}>
+                              <DetailedSeoScore page={page} />
                             </td>
-                            <td className={(page.fcp !== undefined && page.fcp > 2.5) ? 'issue-cell' : ''}>
-                              {page.fcp ? `${page.fcp.toFixed(2)}s` : '-'}
-                            </td>
-                            <td>
-                              {page.seoScore !== undefined ? renderSeoScore(Math.round(page.seoScore)) : '-'}
-                            </td>
-                          </>
+                          </tr>
                         )}
-                      </tr>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>

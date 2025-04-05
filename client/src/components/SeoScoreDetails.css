@@ -1,0 +1,182 @@
+/* src/components/SeoScoreDetails.css */
+.seo-score-details {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 15px;
+  }
+  
+  .score-overview {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .score-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+  }
+  
+  .score-value {
+    font-size: 24px;
+    font-weight: bold;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .score-value.good {
+    background-color: #34a853;
+  }
+  
+  .score-value.average {
+    background-color: #fbbc05;
+  }
+  
+  .score-value.poor {
+    background-color: #ea4335;
+  }
+  
+  .score-summary {
+    flex: 1;
+  }
+  
+  .score-summary h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .score-summary p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .lost-points {
+    color: #ea4335 !important;
+    font-weight: 500;
+    margin-top: 5px !important;
+  }
+  
+  .penalties-list {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 15px;
+  }
+  
+  .penalties-list h4 {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+  
+  .penalty-item {
+    background-color: white;
+    border-radius: 4px;
+    border-left: 3px solid #ea4335;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  .penalty-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f5f5f5;
+    font-size: 13px;
+  }
+  
+  .penalty-category {
+    background-color: #e8eaf6;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    color: #3f51b5;
+    margin-right: 10px;
+  }
+  
+  .penalty-name {
+    font-weight: 500;
+    flex: 1;
+  }
+  
+  .penalty-value {
+    font-weight: bold;
+    color: #ea4335;
+  }
+  
+  .penalty-details {
+    padding: 10px 15px;
+  }
+  
+  .penalty-message {
+    margin: 0 0 5px;
+    font-size: 13px;
+    color: #333;
+  }
+  
+  .penalty-recommendation {
+    margin: 0;
+    font-size: 12px;
+    color: #0277bd;
+    background-color: #e1f5fe;
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+  
+  .no-penalties {
+    text-align: center;
+    padding: 20px;
+    background-color: #e8f5e9;
+    border-radius: 6px;
+    color: #2e7d32;
+  }
+  
+  /* Style pour les pages avec un score modéré */
+  .penalty-item.moderate {
+    border-left-color: #fbbc05;
+  }
+  
+  .penalty-item.moderate .penalty-value {
+    color: #fbbc05;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 600px) {
+    .score-overview {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .score-circle {
+      margin-right: 0;
+      margin-bottom: 15px;
+    }
+    
+    .score-summary {
+      text-align: center;
+    }
+    
+    .penalty-header {
+      flex-wrap: wrap;
+    }
+    
+    .penalty-category {
+      margin-bottom: 5px;
+    }
+  }

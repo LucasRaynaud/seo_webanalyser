@@ -1,6 +1,7 @@
-/* src/components/ContentAnalysis.css */
+/* src/components/ContentAnalysis.css - avec le résumé modifié */
+
 .content-analysis-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 2rem auto;
   padding: 2rem;
   background-color: white;
@@ -138,8 +139,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-note {
@@ -334,4 +340,124 @@
 
 .action-button.secondary:hover {
   background-color: #e8e8e8;
+}
+
+/* Modification: déplacer les détails sous chaque ligne plutôt qu'à droite */
+.pages-table tr.selected-row {
+  background-color: #e8f5e9;
+}
+
+.pages-table tr.details-row {
+  background-color: #f9f9f9;
+  display: table-row;
+  width: 100%;
+}
+
+.pages-table tr.details-row td {
+  padding: 15px;
+  border-top: none;
+  display: table-cell;
+}
+
+/* Conteneur pour le détail */
+.detail-container {
+  width: 100%;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+/* Style pour le bouton de détails */
+.details-button {
+  background-color: #f1f3f4;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.details-button:hover {
+  background-color: #e8eaed;
+}
+
+.detail-mode-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.detail-mode-button {
+  background-color: #f1f3f4;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.detail-mode-button.active {
+  background-color: #4285f4;
+  color: white;
+  border-color: #4285f4;
+}
+
+/* Styles pour le résumé qui sera placé sous chaque page */
+.page-summary {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.summary-header {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.summary-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.summary-item {
+  font-size: 13px;
+  color: #555;
+}
+
+.summary-label {
+  font-weight: 500;
+  margin-right: 5px;
+}
+
+.summary-value {
+  color: #333;
+}
+
+.summary-issues {
+  margin-top: 8px;
+}
+
+.summary-issue-item {
+  background-color: #fff2f0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: #d93025;
+}
+
+/* Responsive pour les petits écrans */
+@media screen and (max-width: 768px) {
+  .summary-content {
+    grid-template-columns: 1fr;
+  }
 }

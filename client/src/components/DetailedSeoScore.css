@@ -1,0 +1,431 @@
+/* src/components/DetailedSeoScore.css */
+.detailed-seo-score {
+    padding: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.score-tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f5f7fa;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px 15px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    outline: none;
+}
+
+.tab-button.active {
+    color: #4285f4;
+    border-bottom: 2px solid #4285f4;
+    background-color: #ffffff;
+}
+
+.tab-button:hover:not(.active) {
+    background-color: #eaeef2;
+}
+
+.score-content {
+    padding: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Styles pour l'onglet Résumé */
+.score-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    margin-right: 20px;
+}
+
+.score-circle.good {
+    background-color: #34a853;
+}
+
+.score-circle.average {
+    background-color: #fbbc05;
+}
+
+.score-circle.poor {
+    background-color: #ea4335;
+}
+
+.score-circle.critical {
+    background-color: #b71c1c;
+}
+
+.score-interpretation h4 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+}
+
+.score-interpretation p {
+    margin: 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.score-breakdown {
+    margin-bottom: 20px;
+}
+
+.score-breakdown h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.category-score {
+    margin-bottom: 12px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.category-name {
+    font-weight: 500;
+}
+
+.category-points {
+    color: #666;
+}
+
+.category-bar {
+    height: 8px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.category-progress {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.category-progress.good {
+    background-color: #34a853;
+}
+
+.category-progress.average {
+    background-color: #fbbc05;
+}
+
+.category-progress.poor {
+    background-color: #ea4335;
+}
+
+.category-progress.critical {
+    background-color: #b71c1c;
+}
+
+.main-issues h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.no-issues {
+    color: #34a853;
+    padding: 10px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.issues-list {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+}
+
+.issue-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background-color: #fff2f0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.issue-category {
+    display: inline-block;
+    background-color: #e8eaf6;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #3f51b5;
+    margin-right: 10px;
+}
+
+.issue-name {
+    flex: 1;
+}
+
+.issue-points {
+    font-weight: bold;
+    color: #ea4335;
+}
+
+.issue-more {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 8px;
+}
+
+/* Styles pour l'onglet Calcul détaillé */
+.score-detailed h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.calculation-steps {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.calculation-step {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background-color: #f5f7fa;
+    font-weight: bold;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.category-calculation {
+    margin-bottom: 1px;
+    background-color: #fff;
+}
+
+.category-header-detailed {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: #f5f7fa;
+    font-weight: 500;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.category-max {
+    color: #666;
+}
+
+.factor-row {
+    display: flex;
+    padding: 8px 15px;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 14px;
+}
+
+.factor-row.negative {
+    background-color: #fff2f0;
+}
+
+.factor-row.positive {
+    background-color: #f1f8e9;
+}
+
+.factor-name {
+    width: 30%;
+    font-weight: 500;
+}
+
+.factor-details {
+    flex: 1;
+    color: #666;
+}
+
+.factor-points {
+    width: 50px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.factor-row.negative .factor-points {
+    color: #ea4335;
+}
+
+.category-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: #e8eaf6;
+    font-weight: 500;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.final-score {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: #4285f4;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Styles pour l'onglet Recommandations */
+.score-recommendations h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.no-recommendations {
+    color: #34a853;
+    padding: 12px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.recommendations-list {
+    margin-bottom: 20px;
+}
+
+.recommendation-item {
+    margin-bottom: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.recommendation-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f5f7fa;
+    font-size: 14px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.recommendation-category {
+    display: inline-block;
+    background-color: #e8eaf6;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #3f51b5;
+    margin-right: 10px;
+}
+
+.recommendation-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.recommendation-impact {
+    font-weight: bold;
+    color: #ea4335;
+    border: 1px solid #ea4335;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.recommendation-details {
+    padding: 12px 15px;
+    background-color: #fff;
+}
+
+.recommendation-issue {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.recommendation-action {
+    margin: 0;
+    background-color: #e1f5fe;
+    padding: 8px 12px;
+    color: #0277bd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.general-tips {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.general-tips h5 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.general-tips ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.general-tips li {
+    margin-bottom: 6px;
+    color: #555;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .score-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .score-circle {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+
+    .factor-row {
+        flex-direction: column;
+    }
+
+    .factor-name {
+        width: 100%;
+        margin-bottom: 4px;
+    }
+
+    .factor-details {
+        margin-bottom: 4px;
+    }
+
+    .factor-points {
+        width: 100%;
+        text-align: left;
+    }
+
+    .tab-button {
+        padding: 10px 5px;
+        font-size: 13px;
+    }
+}
