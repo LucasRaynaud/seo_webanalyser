@@ -1,7 +1,7 @@
-/* src/components/ContentAnalysis.css - avec le résumé modifié */
+/* src/components/ContentAnalysis.css - avec exclusion des pages 404 */
 
 .content-analysis-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
   background-color: white;
@@ -269,6 +269,20 @@
   text-decoration: underline;
 }
 
+/* Exclusion des pages en 404, PDF et images */
+.pages-table tr.status-404,
+.pages-table tr.file-pdf,
+.pages-table tr.file-image {
+  display: none;
+}
+
+/* Également masquer les lignes de détails correspondantes */
+.pages-table tr.status-404 + tr.details-row,
+.pages-table tr.file-pdf + tr.details-row,
+.pages-table tr.file-image + tr.details-row {
+  display: none;
+}
+
 .error-row {
   background-color: #fff6f6;
 }
@@ -342,30 +356,17 @@
   background-color: #e8e8e8;
 }
 
-/* Modification: déplacer les détails sous chaque ligne plutôt qu'à droite */
 .pages-table tr.selected-row {
   background-color: #e8f5e9;
 }
 
 .pages-table tr.details-row {
   background-color: #f9f9f9;
-  display: table-row;
-  width: 100%;
 }
 
 .pages-table tr.details-row td {
-  padding: 15px;
+  padding: 0;
   border-top: none;
-  display: table-cell;
-}
-
-/* Conteneur pour le détail */
-.detail-container {
-  width: 100%;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  border: 1px solid #eee;
 }
 
 /* Style pour le bouton de détails */
@@ -374,11 +375,6 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 5px 10px;
-  cursor: pointer;
-}
-
-.details-button:hover {
-  background-color: #e8eaed;
 }
 
 .detail-mode-selector {

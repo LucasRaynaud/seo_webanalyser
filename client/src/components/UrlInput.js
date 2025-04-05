@@ -30,7 +30,7 @@ function UrlInput({ onAnalyze }) {
     try {
       // Ici nous ferons l'appel à notre API de crawling
       setStatusMessage('Crawl des pages en cours...');
-      const response = await fetch('http://localhost:5000/api/crawl', {
+      const response = await fetch('/api/crawl', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
