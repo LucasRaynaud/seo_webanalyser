@@ -214,7 +214,13 @@ function DetailedSeoScore({ page }) {
                     <span className="links-stat-value">{page.noFollowLinks || 0}</span>
                   </div>
                   <div className="links-stat-card">
-                    <span className="links-stat-title">Cassés</span>
+                    <span className="links-stat-title">Liens 404</span>
+                    <span className={`links-stat-value ${page.broken404Count > 0 ? 'error-value' : ''}`}>
+                      {page.broken404Count || 0}
+                    </span>
+                  </div>
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">Autres cassés</span>
                     <span className="links-stat-value">{page.brokenLinks || 0}</span>
                   </div>
                 </div>
@@ -265,9 +271,21 @@ function DetailedSeoScore({ page }) {
                         <strong>Attention:</strong> Votre page contient très peu de liens internes. Ajoutez plus de liens vers d'autres pages de votre site pour améliorer le maillage interne.
                       </li>
                     )}
+                    {page.broken404Count > 0 && (
+                      <li className="links-recommendation-item error">
+                        <strong>Critique:</strong> Votre page contient {page.broken404Count} lien(s) interne(s) menant à des pages 404. Ces erreurs doivent être corrigées en priorité.
+                        {page.brokenInternalLinks && page.brokenInternalLinks.length > 0 && (
+                          <ul className="broken-urls-list">
+                            {page.brokenInternalLinks.map((link, idx) => (
+                              <li key={idx} className="broken-url">{link.url}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    )}
                     {page.brokenLinks > 0 && (
                       <li className="links-recommendation-item">
-                        <strong>Important:</strong> Votre page contient {page.brokenLinks} liens potentiellement cassés. Vérifiez et corrigez ces liens pour améliorer l'expérience utilisateur.
+                        <strong>Important:</strong> Votre page contient {page.brokenLinks} liens potentiellement cassés (URLs non valides, JavaScript, etc.). Vérifiez et corrigez ces liens.
                       </li>
                     )}
                     {page.noFollowLinks > page.internalLinks * 0.5 && (

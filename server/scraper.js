@@ -68,6 +68,31 @@ async function extractBasicMetrics(url) {
   }
 }
 
+// Fonction pour vérifier si une URL renvoie une erreur 404
+async function checkUrlStatus(url) {
+  try {
+    const response = await axios.head(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; SEOAnalyzerBot/1.0)',
+      },
+      timeout: 5000,
+      validateStatus: () => true // Ne pas rejeter les erreurs HTTP, on veut le statut
+    });
+    return {
+      url,
+      status: response.status,
+      is404: response.status === 404
+    };
+  } catch (error) {
+    return {
+      url,
+      status: 0, // Erreur de connexion/timeout
+      is404: true, // Considéré comme cassé
+      error: error.message
+    };
+  }
+}
+
 // Fonction pour extraire les métriques de performance avec Puppeteer (plus lent, mais plus précis)
 async function extractPerformanceMetrics(url) {
   let browser = null;
@@ -161,6 +186,9 @@ async function extractPerformanceMetrics(url) {
       let noFollowLinks = 0;
       let brokenLinks = 0;
       
+      // Collecter tous les liens internes pour vérification 404
+      const allInternalLinks = [];
+      
       // Extraire des informations sur les liens
       const linksInfo = links
         .filter(link => {
@@ -181,6 +209,9 @@ async function extractPerformanceMetrics(url) {
           // Incrémenter les compteurs
           if (isInternal) {
             internalLinks++;
+            
+            // Enregistrer l'URL du lien interne pour vérification 404
+            allInternalLinks.push(href);
           } else if (domain) {
             externalLinks++;
           }
@@ -200,7 +231,7 @@ async function extractPerformanceMetrics(url) {
             isInternal,
             isNoFollow
           };
-        }).slice(0, 50); // Limiter à 50 liens pour éviter un payload trop grand
+        }).slice(0, 50); // Limiter à 50 liens dans le résultat pour éviter un payload trop grand
       
       return {
         totalLinks: linksInfo.length, // Compte uniquement les liens retenus après filtrage
@@ -208,12 +239,30 @@ async function extractPerformanceMetrics(url) {
         externalLinks,
         noFollowLinks,
         brokenLinks,
-        linksInfo
+        linksInfo,
+        allInternalLinks // Tous les liens internes pour vérification 404
       };
     }, url);
     
+    // Fermer le navigateur Puppeteer
     await browser.close();
     browser = null;
+    
+    // Vérification des liens internes pour détecter les 404
+    // Limiter le nombre de liens à vérifier (max 30) pour ne pas surcharger
+    const internalLinksToCheck = linkAnalysis.allInternalLinks.slice(0, 30);
+    
+    // Vérifier les liens par lots de 5 en parallèle
+    const batchSize = 5;
+    let brokenInternalLinks = [];
+    
+    for (let i = 0; i < internalLinksToCheck.length; i += batchSize) {
+      const batch = internalLinksToCheck.slice(i, i + batchSize);
+      const results = await Promise.all(batch.map(link => checkUrlStatus(link)));
+      
+      // Ajouter les liens 404 à notre liste
+      brokenInternalLinks = brokenInternalLinks.concat(results.filter(result => result.is404));
+    }
     
     return {
       url,
@@ -231,7 +280,10 @@ async function extractPerformanceMetrics(url) {
       externalLinks: linkAnalysis.externalLinks,
       noFollowLinks: linkAnalysis.noFollowLinks,
       brokenLinks: linkAnalysis.brokenLinks,
-      linksInfo: linkAnalysis.linksInfo
+      linksInfo: linkAnalysis.linksInfo,
+      // Informations sur les liens 404
+      brokenInternalLinks: brokenInternalLinks,
+      broken404Count: brokenInternalLinks.length
     };
   } catch (error) {
     console.error(`Erreur lors de l'analyse de ${url} avec Puppeteer:`, error);

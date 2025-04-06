@@ -440,6 +440,10 @@
     color: #4285f4;
 }
 
+.links-stat-value.error-value {
+    color: #ea4335;
+}
+
 .links-details h5 {
     margin: 20px 0 10px 0;
     font-size: 15px;
@@ -531,6 +535,27 @@
 
 .links-recommendation-item.info strong {
     color: #0277bd;
+}
+
+.links-recommendation-item.error {
+    background-color: #ffebee;
+}
+
+.links-recommendation-item.error strong {
+    color: #d32f2f;
+}
+
+.broken-urls-list {
+    margin-top: 8px;
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.broken-url {
+    font-size: 13px;
+    color: #d32f2f;
+    word-break: break-all;
+    margin-bottom: 4px;
 }
 
 /* Styles pour les éléments de l'onglet Liens */
