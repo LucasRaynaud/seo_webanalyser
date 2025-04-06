@@ -31,7 +31,7 @@ function ContentAnalysis({ pages, onCloseAnalysis }) {
     const progressInterval = startProgressSimulation();
 
     try {
-      const response = await fetch('/api/analyze-site', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analyze-site`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ function UrlInput({ onAnalyze }) {
     try {
       // Ici nous ferons l'appel à notre API de crawling
       setStatusMessage('Crawl des pages en cours...');
-      const response = await fetch('/api/crawl', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/crawl`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
