@@ -203,19 +203,17 @@ async function analyzePage(url) {
   }
 }
 
-// Fonction pour calculer un score SEO simple basé sur les métriques
-// Modification de la fonction de calcul du score SEO dans server/scraper.js
-
-// Fonction pour calculer un score SEO détaillé basé sur les métriques
+// Fonction mise à jour pour calculer un score SEO détaillé sans évaluation de la qualité du contenu et optimisation mobile
 function calculateSEOScore(basicMetrics, performanceMetrics) {
   // Initialisation des scores par catégorie
+  // Redistribution des points (10 points de contenu et 3 points technique ont été redistribués)
   const scoreDetails = {
     baseScore: 100,
     categories: {
-      structure: { maxPoints: 40, earned: 40, factors: [] },
-      performance: { maxPoints: 30, earned: 30, factors: [] },
-      content: { maxPoints: 20, earned: 20, factors: [] },
-      technical: { maxPoints: 10, earned: 10, factors: [] }
+      structure: { maxPoints: 45, earned: 45, factors: [] }, // +5 points (de 40 à 45)
+      performance: { maxPoints: 35, earned: 35, factors: [] }, // +5 points (de 30 à 35)
+      content: { maxPoints: 10, earned: 10, factors: [] }, // -10 points (de 20 à 10, suppression qualité contenu)
+      technical: { maxPoints: 10, earned: 10, factors: [] } // Inchangé, mais redistribution interne
     },
     allFactors: []
   };
@@ -254,13 +252,14 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
     }
   };
 
-  // ===== Évaluation de la structure (40 points max) =====
+  // ===== Évaluation de la structure (45 points max) =====
+  // +5 points par rapport à l'original
   
-  // Méta-titre (15 points)
+  // Méta-titre (18 points) (+3 par rapport aux 15 précédents)
   applyPenalty(
     'structure',
     'Méta-titre',
-    -15,
+    -18,
     basicMetrics.missingTitle,
     'Le méta-titre est manquant',
     'Ajoutez un méta-titre descriptif incluant le mot-clé principal'
@@ -269,17 +268,17 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
   applyPenalty(
     'structure',
     'Longueur du méta-titre',
-    -5,
+    -6, // +1 par rapport aux 5 précédents
     !basicMetrics.missingTitle && basicMetrics.hasTooLongTitle,
     `Le méta-titre est trop long (${basicMetrics.metaTitleLength} caractères)`,
     'Raccourcissez le titre à moins de 60 caractères'
   );
   
-  // Méta-description (10 points)
+  // Méta-description (12 points) (+2 par rapport aux 10 précédents)
   applyPenalty(
     'structure',
     'Méta-description',
-    -10,
+    -12,
     basicMetrics.missingDescription,
     'La méta-description est manquante',
     'Ajoutez une méta-description attrayante avec appel à l\'action'
@@ -288,17 +287,17 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
   applyPenalty(
     'structure',
     'Longueur de la méta-description',
-    -5,
+    -6, // +1 par rapport aux 5 précédents
     !basicMetrics.missingDescription && basicMetrics.hasTooLongDescription,
     `La méta-description est trop longue (${basicMetrics.metaDescriptionLength} caractères)`,
     'Limitez la description à 160 caractères maximum'
   );
   
-  // Balise H1 (10 points)
+  // Balise H1 (12 points) (+2 par rapport aux 10 précédents)
   applyPenalty(
     'structure',
     'Balise H1',
-    -10,
+    -12,
     basicMetrics.missingH1,
     'La balise H1 est manquante',
     'Ajoutez une balise H1 décrivant le contenu principal de la page'
@@ -307,30 +306,31 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
   applyPenalty(
     'structure',
     'Unicité de la balise H1',
-    -5,
+    -6, // +1 par rapport aux 5 précédents
     !basicMetrics.missingH1 && basicMetrics.hasMultipleH1,
     `${basicMetrics.h1Count} balises H1 détectées`,
     'Gardez une seule balise H1 par page'
   );
   
-  // Structure des sous-titres (5 points)
+  // Structure des sous-titres (7 points) (+2 par rapport aux 5 précédents)
   applyPenalty(
     'structure',
     'Balises H2',
-    -5,
+    -7,
     basicMetrics.h2Count === 0,
     'Aucune balise H2 n\'est présente',
     'Utilisez des H2 pour structurer votre contenu en sections'
   );
   
-  // ===== Évaluation de la performance (30 points max) =====
+  // ===== Évaluation de la performance (35 points max) =====
+  // +5 points par rapport à l'original
   if (performanceMetrics) {
-    // Temps de chargement (15 points)
+    // Temps de chargement (18 points) (+3 par rapport aux 15 précédents)
     if (performanceMetrics.loadTime > 5) {
       applyPenalty(
         'performance',
         'Temps de chargement',
-        -15,
+        -18,
         true,
         `Le temps de chargement est très lent (${performanceMetrics.loadTime.toFixed(2)}s)`,
         'Optimisez les images et minimisez les ressources bloquantes'
@@ -339,7 +339,7 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
       applyPenalty(
         'performance',
         'Temps de chargement',
-        -10,
+        -12, // +2 par rapport aux 10 précédents
         true,
         `Le temps de chargement est lent (${performanceMetrics.loadTime.toFixed(2)}s)`,
         'Améliorez la vitesse en activant la mise en cache et la compression'
@@ -348,18 +348,18 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
       applyPenalty(
         'performance',
         'Temps de chargement',
-        -15,
+        -18,
         false,
         `Le temps de chargement est bon (${performanceMetrics.loadTime.toFixed(2)}s)`
       );
     }
     
-    // First Contentful Paint (10 points)
+    // First Contentful Paint (12 points) (+2 par rapport aux 10 précédents)
     if (performanceMetrics.fcp > 3) {
       applyPenalty(
         'performance',
         'First Contentful Paint (FCP)',
-        -10,
+        -12,
         true,
         `Le FCP est très lent (${performanceMetrics.fcp.toFixed(2)}s)`,
         'Réduisez le délai avant affichage du premier contenu'
@@ -368,7 +368,7 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
       applyPenalty(
         'performance',
         'First Contentful Paint (FCP)',
-        -5,
+        -6, // +1 par rapport aux 5 précédents
         true,
         `Le FCP est lent (${performanceMetrics.fcp.toFixed(2)}s)`,
         'Améliorez le FCP en optimisant le CSS critique'
@@ -377,13 +377,13 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
       applyPenalty(
         'performance',
         'First Contentful Paint (FCP)',
-        -10,
+        -12,
         false,
         `Le FCP est bon (${performanceMetrics.fcp.toFixed(2)}s)`
       );
     }
     
-    // Poids de la page (5 points)
+    // Poids de la page (5 points) (Inchangé)
     if (performanceMetrics.pageSize) {
       if (performanceMetrics.pageSize > 3000) {
         applyPenalty(
@@ -429,13 +429,15 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
     scoreDetails.categories.performance.factors.push({
       category: 'performance',
       name: 'Performances',
-      points: -30,
+      points: -35, // Ajusté à 35 points au lieu de 30
       details: 'Métriques de performance non disponibles',
       recommendation: 'Utilisez l\'analyse complète pour évaluer les performances'
     });
   }
   
-  // ===== Évaluation du contenu (20 points max) =====
+  // ===== Évaluation du contenu (10 points max) =====
+  // Suppression de l'évaluation de la qualité du contenu (10 points)
+  // Maintien uniquement des images et attributs alt (10 points)
   
   // Images et attributs alt (10 points)
   if (performanceMetrics && performanceMetrics.imagesCount !== undefined) {
@@ -491,59 +493,39 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
     });
   }
   
-  // Qualité et longueur du contenu (10 points)
-  // Cette métrique est difficile à évaluer automatiquement, donc on attribue un score neutre
-  scoreDetails.categories.content.earned -= 10;
-  scoreDetails.categories.content.factors.push({
-    category: 'content',
-    name: 'Qualité du contenu',
-    points: -10,
-    details: 'Évaluation qualitative non disponible',
-    recommendation: 'Une analyse manuelle est nécessaire pour évaluer la qualité du contenu'
-  });
-  
   // ===== Évaluation technique (10 points max) =====
+  // Redistribution des 3 points d'optimisation mobile aux deux métriques existantes
   
-  // URL canonique (3 points)
+  // URL canonique (5 points) (+2 par rapport aux 3 précédents)
   applyPenalty(
     'technical',
     'URL canonique',
-    -3,
+    -5,
     !basicMetrics.canonicalUrl,
     'URL canonique manquante',
     'Ajoutez une balise canonique pour éviter les problèmes de contenu dupliqué'
   );
   
-  // Données structurées (4 points)
+  // Données structurées (5 points) (+1 par rapport aux 4 précédents)
   if (performanceMetrics) {
     applyPenalty(
       'technical',
       'Données structurées',
-      -4,
+      -5,
       performanceMetrics.hasStructuredData === false,
       'Aucune donnée structurée détectée',
       'Implémentez des données structurées schema.org pour améliorer la visibilité SERP'
     );
   } else {
-    scoreDetails.categories.technical.earned -= 4;
+    scoreDetails.categories.technical.earned -= 5;
     scoreDetails.categories.technical.factors.push({
       category: 'technical',
       name: 'Données structurées',
-      points: -4,
+      points: -5,
       details: 'Mesure non disponible',
       recommendation: 'Une analyse complète est nécessaire pour évaluer ce facteur'
     });
   }
-  
-  // Optimisation mobile (3 points) - Non évaluée automatiquement
-  scoreDetails.categories.technical.earned -= 3;
-  scoreDetails.categories.technical.factors.push({
-    category: 'technical',
-    name: 'Optimisation mobile',
-    points: -3,
-    details: 'Non évaluée automatiquement',
-    recommendation: 'Vérifiez la compatibilité mobile manuellement'
-  });
   
   // Calcul du score final
   let finalScore = 0;
@@ -579,22 +561,22 @@ function calculateSiteStats(results) {
       structure: {
         average: average(validResults.filter(r => r.scoreDetails && r.scoreDetails.categories.structure)
           .map(r => r.scoreDetails.categories.structure.earned / r.scoreDetails.categories.structure.maxPoints * 100)),
-        maxScore: 40
+        maxScore: 45 // Mis à jour de 40 à 45
       },
       performance: {
         average: average(validResults.filter(r => r.scoreDetails && r.scoreDetails.categories.performance)
           .map(r => r.scoreDetails.categories.performance.earned / r.scoreDetails.categories.performance.maxPoints * 100)),
-        maxScore: 30
+        maxScore: 35 // Mis à jour de 30 à 35
       },
       content: {
         average: average(validResults.filter(r => r.scoreDetails && r.scoreDetails.categories.content)
           .map(r => r.scoreDetails.categories.content.earned / r.scoreDetails.categories.content.maxPoints * 100)),
-        maxScore: 20
+        maxScore: 10 // Mis à jour de 20 à 10
       },
       technical: {
         average: average(validResults.filter(r => r.scoreDetails && r.scoreDetails.categories.technical)
           .map(r => r.scoreDetails.categories.technical.earned / r.scoreDetails.categories.technical.maxPoints * 100)),
-        maxScore: 10
+        maxScore: 10 // Inchangé
       }
     },
     
@@ -644,6 +626,12 @@ function getCommonIssues(results) {
     .sort((a, b) => b.count - a.count);
   
   return sortedIssues.slice(0, 5); // Retourner les 5 problèmes les plus courants
+}
+
+// Fonction helper pour calculer la moyenne
+function average(values) {
+  if (!values || values.length === 0) return 0;
+  return values.reduce((sum, val) => sum + val, 0) / values.length;
 }
 
 module.exports = {
