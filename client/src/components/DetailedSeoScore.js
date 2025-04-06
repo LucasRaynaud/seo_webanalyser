@@ -1,4 +1,4 @@
-// src/components/DetailedSeoScore.js - Version modifiée
+// src/components/DetailedSeoScore.js - Version modifiée avec informations sur les liens
 import React, { useState } from 'react';
 import './DetailedSeoScore.css';
 
@@ -12,9 +12,9 @@ function DetailedSeoScore({ page }) {
   const scoreDetails = page.scoreDetails || {
     baseScore: 100,
     categories: {
-      structure: { maxPoints: 40, earned: 0, factors: [] },
-      performance: { maxPoints: 30, earned: 0, factors: [] },
-      content: { maxPoints: 20, earned: 0, factors: [] },
+      structure: { maxPoints: 45, earned: 0, factors: [] },
+      performance: { maxPoints: 35, earned: 0, factors: [] },
+      content: { maxPoints: 10, earned: 0, factors: [] },
       technical: { maxPoints: 10, earned: 0, factors: [] }
     }
   };
@@ -69,6 +69,12 @@ function DetailedSeoScore({ page }) {
           onClick={() => setActiveTab('recommendations')}
         >
           Recommandations
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'links' ? 'active' : ''}`}
+          onClick={() => setActiveTab('links')}
+        >
+          Liens
         </button>
       </div>
       
@@ -177,9 +183,110 @@ function DetailedSeoScore({ page }) {
                 <li>Assurez-vous que le contenu est original et de qualité</li>
                 <li>Optimisez les images avec des dimensions appropriées</li>
                 <li>Utilisez des liens internes pour renforcer la structure du site</li>
-                <li>Assurez-vous que votre site est mobile-friendly</li>
               </ul>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'links' && (
+          <div className="score-links">
+            <h4>Analyse des liens</h4>
+            
+            {!page.totalLinks ? (
+              <p className="no-links-data">Données sur les liens non disponibles. Effectuez une analyse complète pour voir ces informations.</p>
+            ) : (
+              <>
+                <div className="links-summary">
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">Total des liens</span>
+                    <span className="links-stat-value">{page.totalLinks}</span>
+                  </div>
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">Liens internes</span>
+                    <span className="links-stat-value">{page.internalLinks}</span>
+                  </div>
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">Liens externes</span>
+                    <span className="links-stat-value">{page.externalLinks}</span>
+                  </div>
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">NoFollow</span>
+                    <span className="links-stat-value">{page.noFollowLinks || 0}</span>
+                  </div>
+                  <div className="links-stat-card">
+                    <span className="links-stat-title">Cassés</span>
+                    <span className="links-stat-value">{page.brokenLinks || 0}</span>
+                  </div>
+                </div>
+
+                {page.linksInfo && page.linksInfo.length > 0 && (
+                  <div className="links-details">
+                    <h5>Détails des liens (max 50)</h5>
+                    <div className="links-table-container">
+                      <table className="links-table">
+                        <thead>
+                          <tr>
+                            <th>Texte</th>
+                            <th>URL</th>
+                            <th>Type</th>
+                            <th>NoFollow</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {page.linksInfo.map((link, index) => (
+                            <tr key={index}>
+                              <td title={link.text}>{link.text}</td>
+                              <td title={link.href}>
+                                <a 
+                                  href={link.href} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                >
+                                  {link.href.length > 40 ? link.href.substring(0, 37) + '...' : link.href}
+                                </a>
+                              </td>
+                              <td>
+                                {link.isInternal ? 'Interne' : 'Externe'}
+                              </td>
+                              <td>{link.isNoFollow ? 'Oui' : 'Non'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div className="links-recommendations">
+                  <h5>Recommandations pour les liens</h5>
+                  <ul>
+                    {page.internalLinks < 3 && (
+                      <li className="links-recommendation-item">
+                        <strong>Attention:</strong> Votre page contient très peu de liens internes. Ajoutez plus de liens vers d'autres pages de votre site pour améliorer le maillage interne.
+                      </li>
+                    )}
+                    {page.brokenLinks > 0 && (
+                      <li className="links-recommendation-item">
+                        <strong>Important:</strong> Votre page contient {page.brokenLinks} liens potentiellement cassés. Vérifiez et corrigez ces liens pour améliorer l'expérience utilisateur.
+                      </li>
+                    )}
+                    {page.noFollowLinks > page.internalLinks * 0.5 && (
+                      <li className="links-recommendation-item">
+                        <strong>À surveiller:</strong> Votre page contient beaucoup de liens nofollow. Vérifiez que vous ne bloquez pas le transfert de juice SEO vers des pages importantes.
+                      </li>
+                    )}
+                    {page.internalLinks >= 3 && page.brokenLinks === 0 && page.noFollowLinks <= page.internalLinks * 0.3 && (
+                      <li className="links-recommendation-item positive">
+                        <strong>Bon travail!</strong> Votre structure de liens semble équilibrée et bien optimisée.
+                      </li>
+                    )}
+                    <li className="links-recommendation-item info">
+                      <strong>Note:</strong> Les liens de type "tel:" et "mailto:" sont exclus de cette analyse.
+                    </li>
+                  </ul>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

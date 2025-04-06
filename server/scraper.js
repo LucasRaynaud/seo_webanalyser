@@ -141,6 +141,77 @@ async function extractPerformanceMetrics(url) {
       });
     });
     
+    // Analyse des liens de la page
+    const linkAnalysis = await page.evaluate((pageUrl) => {
+      // Fonction pour extraire le domaine d'une URL
+      const getDomain = (url) => {
+        try {
+          return new URL(url).hostname;
+        } catch (e) {
+          return null;
+        }
+      };
+      
+      const pageDomain = getDomain(pageUrl);
+      const links = Array.from(document.querySelectorAll('a[href]'));
+      
+      // Comptage des liens
+      let internalLinks = 0;
+      let externalLinks = 0;
+      let noFollowLinks = 0;
+      let brokenLinks = 0;
+      
+      // Extraire des informations sur les liens
+      const linksInfo = links
+        .filter(link => {
+          const href = link.href;
+          // Ignorer complètement les liens tel: et mailto:
+          return !href.startsWith('tel:') && !href.startsWith('mailto:');
+        })
+        .map(link => {
+          const href = link.href;
+          const rel = link.getAttribute('rel') || '';
+          const text = link.textContent.trim();
+          const isNoFollow = rel.includes('nofollow');
+          const domain = getDomain(href);
+          
+          // Si le domaine est le même que celui de la page, c'est un lien interne
+          const isInternal = domain === pageDomain;
+          
+          // Incrémenter les compteurs
+          if (isInternal) {
+            internalLinks++;
+          } else if (domain) {
+            externalLinks++;
+          }
+          
+          if (isNoFollow) {
+            noFollowLinks++;
+          }
+          
+          // Les liens vides ou avec des URLs non valides peuvent être considérés comme cassés
+          if (!href || href === '#' || href.startsWith('javascript:')) {
+            brokenLinks++;
+          }
+          
+          return {
+            href,
+            text: text.length > 30 ? text.substring(0, 27) + '...' : text,
+            isInternal,
+            isNoFollow
+          };
+        }).slice(0, 50); // Limiter à 50 liens pour éviter un payload trop grand
+      
+      return {
+        totalLinks: linksInfo.length, // Compte uniquement les liens retenus après filtrage
+        internalLinks,
+        externalLinks,
+        noFollowLinks,
+        brokenLinks,
+        linksInfo
+      };
+    }, url);
+    
     await browser.close();
     browser = null;
     
@@ -154,6 +225,13 @@ async function extractPerformanceMetrics(url) {
       imagesCount: imagesInfo.length,
       imagesWithoutAlt: imagesInfo.filter(img => !img.hasAlt).length,
       hasStructuredData: structuredData.length > 0,
+      // Information sur les liens
+      totalLinks: linkAnalysis.totalLinks,
+      internalLinks: linkAnalysis.internalLinks,
+      externalLinks: linkAnalysis.externalLinks,
+      noFollowLinks: linkAnalysis.noFollowLinks,
+      brokenLinks: linkAnalysis.brokenLinks,
+      linksInfo: linkAnalysis.linksInfo
     };
   } catch (error) {
     console.error(`Erreur lors de l'analyse de ${url} avec Puppeteer:`, error);
@@ -494,36 +572,81 @@ function calculateSEOScore(basicMetrics, performanceMetrics) {
   }
   
   // ===== Évaluation technique (10 points max) =====
-  // Redistribution des 3 points d'optimisation mobile aux deux métriques existantes
+  // Redistribution des points avec ajout d'une évaluation des liens
   
-  // URL canonique (5 points) (+2 par rapport aux 3 précédents)
+  // URL canonique (3 points) (au lieu de 5 précédemment)
   applyPenalty(
     'technical',
     'URL canonique',
-    -5,
+    -3,
     !basicMetrics.canonicalUrl,
     'URL canonique manquante',
     'Ajoutez une balise canonique pour éviter les problèmes de contenu dupliqué'
   );
   
-  // Données structurées (5 points) (+1 par rapport aux 4 précédents)
+  // Données structurées (3 points) (au lieu de 5 précédemment)
   if (performanceMetrics) {
     applyPenalty(
       'technical',
       'Données structurées',
-      -5,
+      -3,
       performanceMetrics.hasStructuredData === false,
       'Aucune donnée structurée détectée',
       'Implémentez des données structurées schema.org pour améliorer la visibilité SERP'
     );
   } else {
-    scoreDetails.categories.technical.earned -= 5;
+    scoreDetails.categories.technical.earned -= 3;
     scoreDetails.categories.technical.factors.push({
       category: 'technical',
       name: 'Données structurées',
-      points: -5,
+      points: -3,
       details: 'Mesure non disponible',
       recommendation: 'Une analyse complète est nécessaire pour évaluer ce facteur'
+    });
+  }
+  
+  // Évaluation des liens (4 points) (nouvelle métrique)
+  if (performanceMetrics && performanceMetrics.totalLinks !== undefined) {
+    // Si pas de liens internes, c'est un problème
+    if (performanceMetrics.internalLinks < 3) {
+      applyPenalty(
+        'technical',
+        'Liens internes',
+        -4,
+        true,
+        `Trop peu de liens internes (${performanceMetrics.internalLinks})`,
+        'Ajoutez plus de liens internes pour améliorer la navigation et le maillage interne'
+      );
+    }
+    // Si trop de liens nofollow ou cassés, c'est un problème mineur
+    else if (performanceMetrics.noFollowLinks > performanceMetrics.internalLinks * 0.5 || 
+             performanceMetrics.brokenLinks > 0) {
+      applyPenalty(
+        'technical',
+        'Qualité des liens',
+        -2,
+        true,
+        `Problèmes de qualité des liens (${performanceMetrics.brokenLinks} cassés, ${performanceMetrics.noFollowLinks} nofollow)`,
+        'Corrigez les liens cassés et révisez votre stratégie d\'utilisation des attributs nofollow'
+      );
+    }
+    else {
+      applyPenalty(
+        'technical',
+        'Liens',
+        -4,
+        false,
+        `Bonne structure de liens (${performanceMetrics.internalLinks} internes, ${performanceMetrics.externalLinks} externes)`
+      );
+    }
+  } else {
+    scoreDetails.categories.technical.earned -= 4;
+    scoreDetails.categories.technical.factors.push({
+      category: 'technical',
+      name: 'Liens',
+      points: -4,
+      details: 'Mesure non disponible',
+      recommendation: 'Une analyse complète est nécessaire pour évaluer la structure des liens'
     });
   }
   
