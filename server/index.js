@@ -1,24 +1,37 @@
 // server/index.js
 const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
-const cheerio = require('cheerio');
-const { URL } = require('url');
+const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./config/db');
+const { protect } = require('./middleware/auth');
+
+// Charger les variables d'environnement
+dotenv.config();
+
+// Connexion à la base de données
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
-// Ajoutez ces lignes en haut du fichier server/index.js
+// Importer les routes
+const authRoutes = require('./routes/auth');
 const { analyzePage, extractBasicMetrics } = require('./scraper');
 
-// Ajoutez ces routes après la route de crawl
+// Utiliser les routes
+app.use('/api/auth', authRoutes);
 
-// Route pour analyser une seule page
-app.post('/api/analyze-page', async (req, res) => {
+// Route pour analyser une seule page (protégée)
+app.post('/api/analyze-page', protect, async (req, res) => {
   const { url } = req.body;
   
   if (!url) {
@@ -34,8 +47,8 @@ app.post('/api/analyze-page', async (req, res) => {
   }
 });
 
-// Route pour analyser toutes les pages d'un crawl
-app.post('/api/analyze-site', async (req, res) => {
+// Route pour analyser toutes les pages d'un crawl (protégée)
+app.post('/api/analyze-site', protect, async (req, res) => {
   const { pages, fullAnalysis = false } = req.body;
   
   if (!pages || !Array.isArray(pages) || pages.length === 0) {
@@ -322,8 +335,8 @@ async function crawlPage(url, baseURL, baseDomain, visitedUrls = new Set(), maxP
   }
 }
 
-// Route pour lancer le crawl
-app.post('/api/crawl', async (req, res) => {
+// Route pour lancer le crawl (protégée)
+app.post('/api/crawl', protect, async (req, res) => {
   const { url, maxPages = 50 } = req.body;
 
   if (!url) {

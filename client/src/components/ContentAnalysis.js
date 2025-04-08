@@ -6,7 +6,7 @@ import SeoScoreDetails from './SeoScoreDetails';
 import DetailedSeoScore from './DetailedSeoScore';
 import './ContentAnalysis.css';
 
-function ContentAnalysis({ pages, onCloseAnalysis }) {
+function ContentAnalysis({ pages, onCloseAnalysis, token }) {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,41 +21,47 @@ function ContentAnalysis({ pages, onCloseAnalysis }) {
       setError('Aucune page à analyser');
       return;
     }
-
+  
     setLoading(true);
     setError('');
     setProgress(0);
     setAnalysisStage('Préparation des pages à analyser...');
-
+  
     // Simulation de progression pour indiquer que le serveur travaille
     const progressInterval = startProgressSimulation();
-
+  
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/analyze-site`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/analyze-site`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           pages: pages,
           fullAnalysis: analysisType === 'full',
         }),
+        credentials: 'include'
       });
-
+  
       if (!response.ok) {
+        // Gestion spécifique des erreurs d'authentification
+        if (response.status === 401) {
+          throw new Error('Session expirée. Veuillez vous reconnecter.');
+        }
         throw new Error('Erreur lors de l\'analyse du site');
       }
-
+  
       // Simuler la finalisation du traitement
       setProgress(95);
       setAnalysisStage('Finalisation de l\'analyse...');
-
+  
       const data = await response.json();
-
+  
       // Analyse terminée
       setProgress(100);
       clearInterval(progressInterval);
-
+  
       setAnalysisResults(data);
     } catch (err) {
       clearInterval(progressInterval);

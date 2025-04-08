@@ -1,5 +1,6 @@
 // src/components/UrlInput.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import LoadingIndicator from './LoadingIndicator';
 import './UrlInput.css';
 
@@ -9,6 +10,8 @@ function UrlInput({ onAnalyze }) {
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
+  
+  const { token } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,17 +31,23 @@ function UrlInput({ onAnalyze }) {
     const progressInterval = startProgressSimulation();
     
     try {
-      // Ici nous ferons l'appel à notre API de crawling
+      // Ici nous ferons l'appel à notre API de crawling avec le token d'authentification
       setStatusMessage('Crawl des pages en cours...');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/crawl`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/crawl`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ url }),
+        credentials: 'include'
       });
       
       if (!response.ok) {
+        // Si le statut est 401, cela signifie que l'authentification a échoué
+        if (response.status === 401) {
+          throw new Error('Session expirée. Veuillez vous reconnecter.');
+        }
         throw new Error('Erreur lors du crawling du site');
       }
       

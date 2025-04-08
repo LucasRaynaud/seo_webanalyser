@@ -1,10 +1,12 @@
 // src/components/CrawlResults.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import ContentAnalysis from './ContentAnalysis';
 import './CrawlResults.css';
 
 function CrawlResults({ results }) {
   const [showContentAnalysis, setShowContentAnalysis] = useState(false);
+  const { token } = useContext(AuthContext);
   
   if (!results || !results.pages || results.pages.length === 0) {
     return null;
@@ -24,6 +26,7 @@ function CrawlResults({ results }) {
         <ContentAnalysis 
           pages={results.pages} 
           onCloseAnalysis={handleCloseAnalysis}
+          token={token}
         />
       ) : (
         <>
