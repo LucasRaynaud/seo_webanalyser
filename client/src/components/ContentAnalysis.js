@@ -10,7 +10,6 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [analysisType, setAnalysisType] = useState('basic'); // 'basic' ou 'full'
   const [progress, setProgress] = useState(0);
   const [analysisStage, setAnalysisStage] = useState('');
   const [selectedPage] = useState(null);
@@ -39,7 +38,7 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
         },
         body: JSON.stringify({
           pages: pages,
-          fullAnalysis: analysisType === 'full',
+          fullAnalysis: true, // Toujours faire une analyse complète
         }),
         credentials: 'include'
       });
@@ -75,11 +74,9 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
   const startProgressSimulation = () => {
     // Nombre total de pages à analyser (limité à 50)
     const totalPages = Math.min(pages.length, 50);
-    const isFullAnalysis = analysisType === 'full';
-
-    // Estimation du temps total en fonction du type d'analyse
-    // (analyse complète est ~5x plus lente)
-    const estimatedTimePerPage = isFullAnalysis ? 1500 : 300; // en ms
+    
+    // Estimation du temps pour l'analyse complète
+    const estimatedTimePerPage = 1500; // en ms
     const updateInterval = 500; // mise à jour toutes les 500ms
 
     // Progression incrémentale pour simuler l'avancement
@@ -107,11 +104,7 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
       } else if (newProgress < 60) {
         setAnalysisStage(`Analyse de la structure HTML (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
       } else if (newProgress < 80) {
-        if (isFullAnalysis) {
-          setAnalysisStage(`Mesure des performances (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
-        } else {
-          setAnalysisStage(`Finalisation (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
-        }
+        setAnalysisStage(`Mesure des performances (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
       } else {
         setAnalysisStage('Compilation des résultats...');
       }
@@ -144,47 +137,13 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
         <div className="analysis-setup">
           <p>Prêt à analyser {pages.length} pages</p>
 
-          <div className="analysis-options">
-            <label className="analysis-option">
-              <input
-                type="radio"
-                value="basic"
-                checked={analysisType === 'basic'}
-                onChange={() => setAnalysisType('basic')}
-              />
-              <div className="option-info">
-                <span className="option-title">Analyse basique</span>
-                <span className="option-description">
-                  Méta-titres, méta-descriptions, structure H1/H2 (rapide)
-                </span>
-              </div>
-            </label>
-
-            <label className="analysis-option">
-              <input
-                type="radio"
-                value="full"
-                checked={analysisType === 'full'}
-                onChange={() => setAnalysisType('full')}
-              />
-              <div className="option-info">
-                <span className="option-title">Analyse complète</span>
-                <span className="option-description">
-                  Inclut les métriques de performance (FCP, temps de chargement) et analyse plus approfondie (plus lent)
-                </span>
-              </div>
-            </label>
-          </div>
-
           <div className="analysis-warnings">
             <p className="warning-message">
               <strong>Note :</strong> L'analyse est limitée à 50 pages maximum pour éviter une surcharge du serveur.
             </p>
-            {analysisType === 'full' && (
-              <p className="warning-message">
-                <strong>Attention :</strong> L'analyse complète utilise un navigateur headless et peut prendre plusieurs minutes.
-              </p>
-            )}
+            <p className="warning-message">
+              <strong>Attention :</strong> L'analyse utilise un navigateur headless et peut prendre plusieurs minutes.
+            </p>
           </div>
 
           <button
@@ -200,14 +159,12 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
           {loading && (
             <div className="loading-container">
               <LoadingIndicator
-                message={`Analyse ${analysisType === 'full' ? 'complète' : 'basique'} en cours`}
+                message="Analyse complète en cours"
                 detailMessage={analysisStage}
                 progress={progress}
               />
               <p className="loading-note">
-                {analysisType === 'full'
-                  ? 'L\'analyse complète peut prendre plusieurs minutes car elle utilise un navigateur headless pour mesurer les performances.'
-                  : 'Veuillez patienter pendant l\'analyse des pages.'}
+                L'analyse peut prendre plusieurs minutes car elle utilise un navigateur headless pour mesurer les performances.
               </p>
             </div>
           )}
@@ -340,13 +297,9 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
                     <th>Titre</th>
                     <th>H1</th>
                     <th>H2</th>
-                    {analysisType === 'full' && (
-                      <>
-                        <th>Temps</th>
-                        <th>FCP</th>
-                        <th>Score</th>
-                      </>
-                    )}
+                    <th>Temps</th>
+                    <th>FCP</th>
+                    <th>Score</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -394,28 +347,26 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
                             )}
                           </td>
                           <td>{(page.h2Count !== undefined) ? page.h2Count : 0}</td>
-                          {analysisType === 'full' && (
-                            <>
-                              <td className={(page.loadTime !== undefined && page.loadTime > 3) ? 'issue-cell' : ''}>
-                                {page.loadTime ? `${page.loadTime.toFixed(2)}s` : '-'}
-                              </td>
-                              <td className={(page.fcp !== undefined && page.fcp > 2.5) ? 'issue-cell' : ''}>
-                                {page.fcp ? `${page.fcp.toFixed(2)}s` : '-'}
-                              </td>
-                              <td>
-                                {page.seoScore !== undefined ? renderSeoScore(Math.round(page.seoScore)) : '-'}
-                              </td>
-                            </>
-                          )}
+                          <td className={(page.loadTime !== undefined && page.loadTime > 3) ? 'issue-cell' : ''}>
+                            {page.loadTime ? `${page.loadTime.toFixed(2)}s` : '-'}
+                          </td>
+                          <td className={(page.fcp !== undefined && page.fcp > 2.5) ? 'issue-cell' : ''}>
+                            {page.fcp ? `${page.fcp.toFixed(2)}s` : '-'}
+                          </td>
+                          <td>
+                            {page.seoScore !== undefined ? renderSeoScore(Math.round(page.seoScore)) : '-'}
+                          </td>
+                          <td>
                             {detailMode === 'simple' ? (
                               <SeoScoreDetails page={page} />
                             ) : (
                               <DetailedSeoScore page={page} />
                             )}
+                          </td>
                         </tr>
                         {isSelected && (
                           <tr className="details-row">
-                            <td colSpan={analysisType === 'full' ? 8 : 5}>
+                            <td colSpan={8}>
                               <DetailedSeoScore page={page} />
                             </td>
                           </tr>
@@ -451,15 +402,9 @@ function exportToCSV(analysisResults) {
 
   const results = analysisResults.results;
 
-  // Déterminer les en-têtes en fonction des données disponibles
-  const hasPerformanceMetrics = results.some(r => r && r.fcp !== undefined);
-
+  // Définir les en-têtes pour l'analyse complète
   let headers = ['URL', 'Titre', 'Longueur du titre', 'Description', 'Longueur de la description',
-    'Nombre de H1', 'Texte H1', 'Nombre de H2'];
-
-  if (hasPerformanceMetrics) {
-    headers = [...headers, 'Temps de chargement (s)', 'FCP (s)', 'Score SEO'];
-  }
+    'Nombre de H1', 'Texte H1', 'Nombre de H2', 'Temps de chargement (s)', 'FCP (s)', 'Score SEO'];
 
   // Fonction pour échapper les champs CSV
   const escapeCsv = (text) => {
@@ -488,16 +433,11 @@ function exportToCSV(analysisResults) {
       escapeCsv(page.metaDescriptionLength || 0),
       escapeCsv(page.h1Count || 0),
       escapeCsv(page.h1Text || ''),
-      escapeCsv(page.h2Count || 0)
+      escapeCsv(page.h2Count || 0),
+      escapeCsv(page.loadTime ? page.loadTime.toFixed(2) : ''),
+      escapeCsv(page.fcp ? page.fcp.toFixed(2) : ''),
+      escapeCsv(page.seoScore !== undefined ? Math.round(page.seoScore) : '')
     ];
-
-    if (hasPerformanceMetrics) {
-      row.push(
-        escapeCsv(page.loadTime ? page.loadTime.toFixed(2) : ''),
-        escapeCsv(page.fcp ? page.fcp.toFixed(2) : ''),
-        escapeCsv(page.seoScore !== undefined ? Math.round(page.seoScore) : '')
-      );
-    }
 
     csvRows.push(row.join(','));
   }

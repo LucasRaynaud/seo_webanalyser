@@ -33,19 +33,55 @@ const { analyzePage, extractBasicMetrics } = require('./scraper');
 app.use('/api/auth', authRoutes);
 
 // Route pour analyser une seule page (protégée)
-app.post('/api/analyze-page', protect, async (req, res) => {
-  const { url } = req.body;
+// Mise à jour de la route pour analyser toutes les pages d'un crawl
+// à intégrer dans server/index.js
+
+// Route pour analyser toutes les pages d'un crawl (protégée)
+app.post('/api/analyze-site', protect, async (req, res) => {
+  const { pages } = req.body;
   
-  if (!url) {
-    return res.status(400).json({ error: 'URL requise' });
+  if (!pages || !Array.isArray(pages) || pages.length === 0) {
+    return res.status(400).json({ error: 'Liste de pages requise' });
   }
   
   try {
-    const analysis = await analyzePage(url);
-    res.json(analysis);
+    // Limiter le nombre de pages à analyser pour éviter une surcharge
+    const pagesToAnalyze = pages.slice(0, 50).map(page => page.url);
+    const startTime = Date.now();
+    
+    // Analyser les pages en parallèle, mais limiter le nombre de requêtes simultanées
+    const results = [];
+    const batchSize = 5; // Nombre de pages à analyser simultanément
+    
+    for (let i = 0; i < pagesToAnalyze.length; i += batchSize) {
+      const batch = pagesToAnalyze.slice(i, i + batchSize);
+      
+      // Toujours utiliser l'analyse complète avec analyzePage
+      const analysisPromises = batch.map(url => analyzePage(url));
+      
+      // Attendre que toutes les analyses du lot soient terminées
+      const batchResults = await Promise.all(analysisPromises);
+      results.push(...batchResults);
+      
+      // Informer le client de la progression
+      const progress = Math.min(100, Math.round((i + batchSize) / pagesToAnalyze.length * 100));
+      console.log(`Progression de l'analyse: ${progress}%`);
+    }
+    
+    const totalTime = (Date.now() - startTime) / 1000; // en secondes
+    
+    // Calcul des statistiques globales
+    const stats = calculateSiteStats(results);
+    
+    res.json({
+      results,
+      stats,
+      totalPages: results.length,
+      totalTime,
+    });
   } catch (error) {
-    console.error('Erreur d\'analyse:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'analyse de la page' });
+    console.error('Erreur d\'analyse du site:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'analyse du site' });
   }
 });
 
