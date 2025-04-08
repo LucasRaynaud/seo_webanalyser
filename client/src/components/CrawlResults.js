@@ -20,6 +20,75 @@ function CrawlResults({ results }) {
     setShowContentAnalysis(false);
   };
 
+  // Fonction pour exporter les résultats en CSV
+  const exportToCSV = () => {
+    // Définir les en-têtes du CSV
+    const headers = [
+      'URL', 
+      'Titre', 
+      'Statut', 
+      'Liens internes', 
+      'Liens externes', 
+      'Meta Description'
+    ];
+    
+    // Fonction pour échapper les champs CSV
+    const escapeCsv = (text) => {
+      if (text === null || text === undefined) return '';
+      // Si le texte contient des virgules, des guillemets ou des sauts de ligne, l'entourer de guillemets
+      // Et échapper les guillemets par un autre guillemet
+      const stringText = String(text);
+      if (stringText.includes(',') || stringText.includes('"') || stringText.includes('\n')) {
+        return `"${stringText.replace(/"/g, '""')}"`;
+      }
+      return stringText;
+    };
+    
+    // Créer les lignes de données pour chaque page
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    
+    results.pages.forEach(page => {
+      const row = [
+        escapeCsv(page.url),
+        escapeCsv(page.title),
+        escapeCsv(page.status),
+        escapeCsv(page.internalLinksCount || 0),
+        escapeCsv(page.externalLinksCount || 0),
+        escapeCsv(page.metaDescription)
+      ];
+      
+      csvRows.push(row.join(','));
+    });
+    
+    // Générer le contenu CSV complet
+    const csvContent = csvRows.join('\n');
+    
+    // Créer un Blob et un lien de téléchargement
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    // Préparer le nom du fichier avec la date
+    const date = new Date().toISOString().split('T')[0];
+    const domain = results.baseURL ? new URL(results.baseURL).hostname : 'site';
+    
+    // Configurer le lien de téléchargement
+    link.setAttribute('href', url);
+    link.setAttribute('download', `crawl-${domain}-${date}.csv`);
+    link.style.visibility = 'hidden';
+    
+    // Ajouter le lien au document, cliquer dessus, puis le supprimer
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Libérer l'URL
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
+
   return (
     <div className="crawl-results-container">
       {showContentAnalysis ? (
@@ -137,7 +206,10 @@ function CrawlResults({ results }) {
         >
           Analyser le contenu des pages
         </button>
-        <button className="action-button secondary">
+        <button 
+          className="action-button secondary"
+          onClick={exportToCSV}
+        >
           Exporter en CSV
         </button>
       </div>

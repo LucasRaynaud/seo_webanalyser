@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const { protect } = require('./middleware/auth');
+const axios = require('axios'); // Ajout de l'import axios manquant
+const cheerio = require('cheerio'); // Ajout de l'import cheerio car il est utilisé dans crawlPage
 
 // Charger les variables d'environnement
 dotenv.config();
