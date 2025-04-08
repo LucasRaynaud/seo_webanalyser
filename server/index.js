@@ -22,7 +22,9 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-app.use(express.json());
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 // Importer les routes
@@ -133,6 +135,27 @@ app.post('/api/analyze-site', protect, async (req, res) => {
   } catch (error) {
     console.error('Erreur d\'analyse du site:', error);
     res.status(500).json({ error: 'Erreur lors de l\'analyse du site' });
+  }
+});
+
+app.post('/api/calculate-stats', protect, async (req, res) => {
+  const { results } = req.body;
+  
+  if (!results || !Array.isArray(results) || results.length === 0) {
+    return res.status(400).json({ error: 'Résultats d\'analyse requis' });
+  }
+  
+  try {
+    // Calculer les statistiques globales
+    const stats = calculateSiteStats(results);
+    
+    res.json({
+      stats,
+      totalResults: results.length
+    });
+  } catch (error) {
+    console.error('Erreur de calcul des statistiques:', error);
+    res.status(500).json({ error: 'Erreur lors du calcul des statistiques' });
   }
 });
 

@@ -15,6 +15,52 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
   const [selectedPage] = useState(null);
   const [detailMode, setDetailMode] = useState('detailed');
 
+  // Fonction pour calculer les statistiques localement si nécessaire
+  const calculateStats = (results) => {
+    const validResults = results.filter(r => !r.error);
+    
+    if (validResults.length === 0) {
+      return { error: 'Aucune page analysée avec succès' };
+    }
+    
+    // Fonctions utilitaires pour les statistiques
+    const average = (values) => {
+      if (values.length === 0) return 0;
+      return values.reduce((sum, val) => sum + val, 0) / values.length;
+    };
+    
+    const percentage = (results, predicate) => {
+      if (results.length === 0) return 0;
+      return (results.filter(predicate).length / results.length) * 100;
+    };
+    
+    // Calcul des moyennes et des pourcentages
+    return {
+      averageLoadTime: average(validResults.map(r => r.loadTime || 0)),
+      averageFCP: average(validResults.filter(r => r.fcp).map(r => r.fcp)),
+      averageTitleLength: average(validResults.map(r => r.metaTitleLength || 0)),
+      averageDescriptionLength: average(validResults.map(r => r.metaDescriptionLength || 0)),
+      
+      pagesWithTitle: percentage(validResults, r => !r.missingTitle),
+      pagesWithDescription: percentage(validResults, r => !r.missingDescription),
+      pagesWithH1: percentage(validResults, r => !r.missingH1),
+      pagesWithMultipleH1: percentage(validResults, r => r.hasMultipleH1),
+      pagesWithH2: percentage(validResults, r => r.h2Count > 0),
+      
+      // Statistiques de performance
+      averagePageSize: average(validResults.filter(r => r.pageSize).map(r => r.pageSize)),
+      averageSEOScore: average(validResults.filter(r => r.seoScore).map(r => r.seoScore)),
+      
+      // Pages avec problèmes
+      pagesWithErrors: results.filter(r => r.error).length,
+      pagesWithPerformanceIssues: validResults.filter(r => r.loadTime > 3).length,
+      
+      // Totaux
+      totalPages: results.length,
+      successfullyAnalyzed: validResults.length,
+    };
+  };
+
   const startAnalysis = async () => {
     if (!pages || pages.length === 0) {
       setError('Aucune page à analyser');
@@ -30,38 +76,70 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
     const progressInterval = startProgressSimulation();
   
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/analyze-site`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          pages: pages,
-          fullAnalysis: true, // Toujours faire une analyse complète
-        }),
-        credentials: 'include'
-      });
-  
-      if (!response.ok) {
-        // Gestion spécifique des erreurs d'authentification
-        if (response.status === 401) {
-          throw new Error('Session expirée. Veuillez vous reconnecter.');
+      // Diviser les pages en lots de 10 pour éviter des payloads trop grands
+      const batchSize = 10;
+      const allResults = [];
+      let totalTimeSum = 0;
+      
+      // Traiter les pages par lots
+      for (let i = 0; i < pages.length; i += batchSize) {
+        const batchNumber = Math.floor(i/batchSize) + 1;
+        const totalBatches = Math.ceil(pages.length/batchSize);
+        
+        setAnalysisStage(`Traitement du lot ${batchNumber}/${totalBatches} (pages ${i+1}-${Math.min(i+batchSize, pages.length)})...`);
+        const batch = pages.slice(i, Math.min(i + batchSize, pages.length));
+        
+        const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/analyze-site`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            pages: batch
+          }),
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Session expirée. Veuillez vous reconnecter.');
+          }
+          throw new Error(`Erreur lors de l'analyse du lot ${batchNumber}/${totalBatches}`);
         }
-        throw new Error('Erreur lors de l\'analyse du site');
+
+        const batchData = await response.json();
+        
+        // Accumuler les résultats
+        if (batchData.results && Array.isArray(batchData.results)) {
+          allResults.push(...batchData.results);
+        }
+        
+        totalTimeSum += batchData.totalTime || 0;
+        
+        // Mettre à jour la progression en fonction du nombre de lots traités
+        const batchProgress = Math.min(90, ((i + batch.length) / pages.length) * 100);
+        setProgress(batchProgress);
       }
-  
-      // Simuler la finalisation du traitement
+
+      // Calculer les statistiques pour tous les résultats combinés
       setProgress(95);
-      setAnalysisStage('Finalisation de l\'analyse...');
-  
-      const data = await response.json();
-  
+      setAnalysisStage('Calcul des statistiques globales...');
+      
+      const stats = calculateStats(allResults);
+      
+      const combinedResult = {
+        results: allResults,
+        totalPages: allResults.length,
+        totalTime: totalTimeSum,
+        stats: stats
+      };
+
       // Analyse terminée
       setProgress(100);
       clearInterval(progressInterval);
-  
-      setAnalysisResults(data);
+
+      setAnalysisResults(combinedResult);
     } catch (err) {
       clearInterval(progressInterval);
       setError(err.message);
@@ -72,14 +150,10 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
 
   // Fonction pour simuler la progression de l'analyse
   const startProgressSimulation = () => {
-    // Nombre total de pages à analyser (limité à 50)
+    // Cette fonction reste la même
     const totalPages = Math.min(pages.length, 50);
-    
-    // Estimation du temps pour l'analyse complète
-    const estimatedTimePerPage = 1500; // en ms
-    const updateInterval = 500; // mise à jour toutes les 500ms
-
-    // Progression incrémentale pour simuler l'avancement
+    const estimatedTimePerPage = 1500;
+    const updateInterval = 500;
     let pagesProcessed = 0;
     let lastUpdateTime = Date.now();
 
@@ -87,26 +161,13 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
       const currentTime = Date.now();
       const elapsedTime = currentTime - lastUpdateTime;
       lastUpdateTime = currentTime;
-
-      // Calcul du nombre de pages traitées en fonction du temps écoulé
       const estimatedPagesProcessed = elapsedTime / estimatedTimePerPage;
       pagesProcessed = Math.min(totalPages, pagesProcessed + estimatedPagesProcessed);
-
-      // Calcul de la progression en pourcentage
       const newProgress = Math.min(90, (pagesProcessed / totalPages) * 100);
-      setProgress(newProgress);
-
-      // Mise à jour du message d'étape en fonction de la progression
-      if (newProgress < 10) {
-        setAnalysisStage('Initialisation de l\'analyse...');
-      } else if (newProgress < 30) {
-        setAnalysisStage(`Analyse des méta-données (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
-      } else if (newProgress < 60) {
-        setAnalysisStage(`Analyse de la structure HTML (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
-      } else if (newProgress < 80) {
-        setAnalysisStage(`Mesure des performances (${Math.floor(pagesProcessed)}/${totalPages} pages)`);
-      } else {
-        setAnalysisStage('Compilation des résultats...');
+      
+      // Ne pas écraser la progression si elle est déjà mise à jour par le traitement par lots
+      if (progress < newProgress) {
+        setProgress(newProgress);
       }
     }, updateInterval);
   };
@@ -139,7 +200,7 @@ function ContentAnalysis({ pages, onCloseAnalysis, token }) {
 
           <div className="analysis-warnings">
             <p className="warning-message">
-              <strong>Note :</strong> L'analyse est limitée à 50 pages maximum pour éviter une surcharge du serveur.
+              <strong>Note :</strong> Les pages seront analysées par lots de 10 pour éviter les problèmes de taille de requête.
             </p>
             <p className="warning-message">
               <strong>Attention :</strong> L'analyse utilise un navigateur headless et peut prendre plusieurs minutes.
@@ -409,8 +470,6 @@ function exportToCSV(analysisResults) {
   // Fonction pour échapper les champs CSV
   const escapeCsv = (text) => {
     if (text === null || text === undefined) return '';
-    // Si le texte contient des virgules, des guillemets ou des sauts de ligne, l'entourer de guillemets
-    // Et échapper les guillemets par un autre guillemet
     const stringText = String(text);
     if (stringText.includes(',') || stringText.includes('"') || stringText.includes('\n')) {
       return `"${stringText.replace(/"/g, '""')}"`;
