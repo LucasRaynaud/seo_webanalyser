@@ -3,10 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
-const connectDB = require('./config/db');
+const { connectDB } = require('./config/db');
 const { protect } = require('./middleware/auth');
-const axios = require('axios'); // Ajout de l'import axios manquant
-const cheerio = require('cheerio'); // Ajout de l'import cheerio car il est utilisé dans crawlPage
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 // Charger les variables d'environnement
 dotenv.config();

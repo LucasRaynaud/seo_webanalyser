@@ -8,7 +8,7 @@ exports.register = async (req, res) => {
 
   try {
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Cet email est déjà utilisé' });
     }
@@ -23,6 +23,13 @@ exports.register = async (req, res) => {
     sendTokenResponse(user, 201, res);
   } catch (error) {
     console.error('Erreur d\'inscription:', error);
+    
+    // Gestion spécifique des erreurs de validation Sequelize
+    if (error.name === 'SequelizeValidationError') {
+      const messages = error.errors.map(err => err.message);
+      return res.status(400).json({ error: messages });
+    }
+    
     res.status(500).json({ error: 'Erreur lors de l\'inscription' });
   }
 };
@@ -40,7 +47,7 @@ exports.login = async (req, res) => {
     }
 
     // Vérifier si l'utilisateur existe
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
@@ -80,11 +87,16 @@ exports.logout = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findByPk(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    
     res.status(200).json({
       success: true,
       data: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -123,7 +135,7 @@ const sendTokenResponse = (user, statusCode, res) => {
       success: true,
       token,
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role

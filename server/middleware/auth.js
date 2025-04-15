@@ -27,9 +27,14 @@ exports.protect = async (req, res, next) => {
     // Vérifier le token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Ajouter l'utilisateur à la requête
-    req.user = await User.findById(decoded.id);
+    // Ajouter l'utilisateur à la requête - utilisation de findByPk pour Sequelize
+    const user = await User.findByPk(decoded.id);
     
+    if (!user) {
+      return res.status(401).json({ error: 'Utilisateur non trouvé' });
+    }
+    
+    req.user = user;
     next();
   } catch (error) {
     console.error('Erreur d\'authentification:', error);
