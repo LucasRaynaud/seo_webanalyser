@@ -1,3 +1,4 @@
+// src/components/Navbar.js (mis à jour avec lien admin)
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -40,7 +41,20 @@ function Navbar() {
                 <span className="navbar-user">
                   Bonjour, {user.name}
                 </span>
+                {user.subscription && user.subscription !== 'free' && (
+                  <span className={`subscription-badge ${user.subscription}`}>
+                    {user.subscription === 'basic' ? 'Basique' : 
+                     user.subscription === 'pro' ? 'Pro' : 'Entreprise'}
+                  </span>
+                )}
               </li>
+              {user.role === 'admin' && (
+                <li className="navbar-item">
+                  <Link to="/admin" className="navbar-link admin-link">
+                    Administration
+                  </Link>
+                </li>
+              )}
               <li className="navbar-item">
                 <button 
                   className="navbar-button logout"

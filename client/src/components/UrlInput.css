@@ -1,4 +1,4 @@
-/* src/components/UrlInput.css */
+/* src/components/UrlInput.css (mis à jour) */
 .url-input-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -17,17 +17,58 @@
 .input-group {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
-.input-group input {
+.url-input {
   flex: 1;
+  min-width: 250px;
   padding: 12px 15px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
 }
 
-.input-group button {
+.pages-limit-container {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0 10px;
+}
+
+.pages-limit-container label {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+.pages-input {
+  width: 60px;
+  padding: 12px 5px;
+  border: none;
+  font-size: 16px;
+  text-align: center;
+  -moz-appearance: textfield; /* Supprime les flèches pour Firefox */
+}
+
+.pages-input::-webkit-outer-spin-button,
+.pages-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pages-limit-info {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  margin-left: 5px;
+}
+
+.analyze-button {
   padding: 12px 20px;
   background-color: #4285f4;
   color: white;
@@ -36,13 +77,14 @@
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
-.input-group button:hover {
+.analyze-button:hover {
   background-color: #3367d6;
 }
 
-.input-group button:disabled {
+.analyze-button:disabled {
   background-color: #a9a9a9;
   cursor: not-allowed;
 }
@@ -54,4 +96,72 @@
 
 .loading-section {
   margin-top: 20px;
+}
+
+.subscription-info {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.subscription-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.subscription-badge.free {
+  background-color: #f1f3f4;
+  color: #5f6368;
+}
+
+.subscription-badge.basic {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+
+.subscription-badge.pro {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.daily-limit {
+  font-size: 13px;
+  color: #666;
+}
+
+.upgrade-link {
+  color: #4285f4;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.upgrade-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .url-input, .pages-limit-container, .analyze-button {
+    width: 100%;
+  }
+  
+  .pages-limit-container {
+    justify-content: space-between;
+  }
+  
+  .subscription-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }

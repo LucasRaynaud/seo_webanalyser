@@ -27,11 +27,24 @@ exports.protect = async (req, res, next) => {
     // Vérifier le token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Ajouter l'utilisateur à la requête - utilisation de findByPk pour Sequelize
+    // Récupérer l'utilisateur avec toutes les informations, y compris l'abonnement
     const user = await User.findByPk(decoded.id);
     
     if (!user) {
       return res.status(401).json({ error: 'Utilisateur non trouvé' });
+    }
+    
+    // Recharger les informations d'abonnement
+    if (decoded.subscription !== user.subscription) {
+      console.log(`Mise à jour des informations d'abonnement: ${decoded.subscription} -> ${user.subscription}`);
+      // Générer un nouveau token avec les informations à jour
+      const newToken = user.getSignedJwtToken();
+      
+      // Mettre à jour le token dans les cookies
+      res.cookie('token', newToken, {
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        httpOnly: true
+      });
     }
     
     req.user = user;

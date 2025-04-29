@@ -1,12 +1,15 @@
+// src/App.js (modifications pour ajouter la route d'administration)
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/auth/PrivateRoute';
+import AdminRoute from './components/auth/AdminRoute'; // Nouveau composant pour les routes admin
 import Navbar from './components/Navbar';
 import UrlInput from './components/UrlInput';
 import CrawlResults from './components/CrawlResults';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import AdminDashboard from './components/admin/AdminDashboard'; // Nouvelle importation
 import './App.css';
 
 function App() {
@@ -26,6 +29,11 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
+              {/* Route pour l'administration protégée */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin/*" element={<AdminDashboard />} />
+              </Route>
               
               <Route element={<PrivateRoute />}>
                 <Route path="/" element={
